@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     guardianName: DataTypes.STRING,
     guardianPhone: DataTypes.STRING,
     enrollmentDate: DataTypes.DATEONLY,
+    residencyExpiry: DataTypes.DATEONLY,
     status: { type: DataTypes.ENUM('active', 'graduated', 'suspended', 'withdrawn'), defaultValue: 'active' },
     notes: DataTypes.TEXT,
     photo: DataTypes.STRING,

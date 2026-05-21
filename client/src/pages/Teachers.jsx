@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Pencil, Trash2, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, FileDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Teachers() {
@@ -53,6 +53,17 @@ export default function Teachers() {
     } catch { toast.error('حدث خطأ'); }
   };
 
+  const handleExportTeacher = async (id, name) => {
+    try {
+      const res = await api.post(`/excel/export-teacher/${id}`, {}, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url; link.download = `${name}.xlsx`; link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('تم تحميل ملف المعلم');
+    } catch { toast.error('حدث خطأ'); }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -99,6 +110,7 @@ export default function Teachers() {
                   <td className="p-3 text-gray-500">{t.phone || '-'}</td>
                   <td className="p-3 text-gray-500">{t.email || '-'}</td>
                   <td className="p-3"><div className="flex gap-2 justify-end">
+                    <button onClick={() => handleExportTeacher(t.id, t.fullName)} className="p-1.5 hover:bg-emerald-100 rounded-lg text-emerald-600" title="تحميل ملف المعلم"><FileDown size={16} /></button>
                     <button onClick={() => handleEdit(t)} className="p-1.5 hover:bg-blue-100 rounded-lg text-blue-600"><Pencil size={16} /></button>
                     <button onClick={() => handleDelete(t.id)} className="p-1.5 hover:bg-red-100 rounded-lg text-red-600"><Trash2 size={16} /></button>
                   </div></td>

@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { parseExcel, createExcel, getSheetNames } = require('../utils/excel');
+const { parseExcel, createExcel, createExcelMultiSheet, getSheetNames } = require('../utils/excel');
 const { Student, Grade, Attendance, Subject, Class, AcademicYear, Teacher, Dormitory, Room, RoomAssignment, Exam, ExamResult, User } = require('../models');
 const { authenticate, authorize } = require('../middleware/auth');
 const { Op } = require('sequelize');
@@ -429,6 +429,71 @@ router.post('/export-students', authorize('admin'), async (req, res) => {
     const buffer = createExcel(data, 'الطلاب');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=students.xlsx');
+    res.send(buffer);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+router.post('/export-teacher/:id', authorize('admin'), async (req, res) => {
+  try {
+    const teacher = await Teacher.findByPk(req.params.id, {
+      include: [
+        { model: Subject, include: [{ model: Class, include: [{ model: Student }] }] },
+        { model: Class, include: [{ model: Student }] },
+      ],
+    });
+    if (!teacher) return res.status(404).json({ message: 'المعلم غير موجود' });
+
+    const teacherSheet = [{
+      الاسم: teacher.fullName, التخصص: teacher.specialization,
+      الهاتف: teacher.phone, البريد: teacher.email,
+      تاريخ_التعيين: teacher.hireDate || '',
+    }];
+
+    const subjectsSet = new Map();
+    const classesSet = new Map();
+    for (const subj of teacher.Subjects || []) {
+      const cls = subj.Class;
+      subjectsSet.set(subj.id, {
+        المادة: subj.name, رمز_المادة: subj.code || '',
+        الصف: cls?.name || '', عدد_الطلاب: cls?.Students?.length || 0,
+      });
+      if (cls) classesSet.set(cls.id, cls);
+    }
+    for (const cls of teacher.Classes || []) {
+      classesSet.set(cls.id, cls);
+      if (![...subjectsSet.values()].some(s => s.الصف === cls.name)) {
+        const dummyId = `class-${cls.id}`;
+        if (!subjectsSet.has(dummyId)) {
+          subjectsSet.set(dummyId, {
+            المادة: '(بدون مادة)', رمز_المادة: '',
+            الصف: cls.name, عدد_الطلاب: cls.Students?.length || 0,
+          });
+        }
+      }
+    }
+
+    const studentsMap = new Map();
+    for (const cls of classesSet.values()) {
+      for (const s of cls.Students || []) {
+        if (!studentsMap.has(s.id)) {
+          studentsMap.set(s.id, {
+            رقم_الطالب: s.studentNumber, الاسم: s.fullName,
+            الجنسية: s.nationality, الهاتف: s.phone,
+            الصف: cls.name, تاريخ_التسجيل: s.enrollmentDate,
+          });
+        }
+      }
+    }
+
+    const sheets = [
+      { name: 'المعلم', data: teacherSheet },
+      { name: 'المواد', data: [...subjectsSet.values()] },
+      { name: 'الطلاب', data: [...studentsMap.values()] },
+    ];
+
+    const buffer = createExcelMultiSheet(sheets);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${teacher.fullName}.xlsx`);
     res.send(buffer);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

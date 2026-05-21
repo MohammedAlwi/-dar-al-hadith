@@ -11,7 +11,7 @@ export default function StudentForm() {
   const [form, setForm] = useState({
     studentNumber: '', fullName: '', fullNameAr: '', dateOfBirth: '', placeOfBirth: '',
     nationality: '', phone: '', email: '', address: '', guardianName: '', guardianPhone: '',
-    enrollmentDate: new Date().toISOString().split('T')[0], classId: '', status: 'active', notes: '',
+    enrollmentDate: new Date().toISOString().split('T')[0], residencyExpiry: '', classId: '', status: 'active', notes: '',
   });
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function StudentForm() {
           dateOfBirth: s.dateOfBirth || '', placeOfBirth: s.placeOfBirth || '',
           nationality: s.nationality || '', phone: s.phone || '', email: s.email || '',
           address: s.address || '', guardianName: s.guardianName || '', guardianPhone: s.guardianPhone || '',
-          enrollmentDate: s.enrollmentDate || '', classId: s.classId || '', status: s.status || 'active', notes: s.notes || '',
+            enrollmentDate: s.enrollmentDate || '', residencyExpiry: s.residencyExpiry || '', classId: s.classId || '', status: s.status || 'active', notes: s.notes || '',
         });
       }).catch(() => navigate('/students'));
     }
@@ -100,6 +100,10 @@ export default function StudentForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ التسجيل</label>
             <input name="enrollmentDate" type="date" value={form.enrollmentDate} onChange={handleChange} className="input-field" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ انتهاء الإقامة</label>
+            <input name="residencyExpiry" type="date" value={form.residencyExpiry} onChange={handleChange} className="input-field" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">الصف</label>

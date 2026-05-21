@@ -17,7 +17,7 @@ const importTypes = [
 
 const guides = {
   students: { required: 'الاسم', optional: 'رقم_الطالب, الجنسية, الهاتف, البريد, العنوان, ولي_الأمر, الصف' },
-  teachers: { required: 'الاسم', optional: 'الهاتف, البريد, التخصص, تاريخ_التعيين' },
+  teachers: { required: 'الاسم', optional: 'الهاتف, البريد, التخصص, تاريخ_التعيين — أو استخدم "تصدير المعلمين" للحصول على ملف بجميع المعلمين مع موادهم وتلاميذهم' },
   classes: { required: 'اسم_الصف', optional: 'المستوى' },
   subjects: { required: 'اسم_المادة', optional: 'رمز_المادة, المعلم, الصف, الدرجة_القصوى, المعامل, الساعات' },
   dormitories: { required: 'اسم_المبنى', optional: 'الموقع, السعة, المشرف' },
@@ -87,6 +87,17 @@ export default function ExcelImport() {
     } catch {}
   };
 
+  const handleExportTeachers = async () => {
+    try {
+      const res = await api.post('/excel/export-teachers', {}, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url; link.download = 'teachers.xlsx'; link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('تم تصدير المعلمين');
+    } catch {}
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-800">رفع وتحليل ملفات Excel</h2>
@@ -118,6 +129,9 @@ export default function ExcelImport() {
           <div className="flex-1"></div>
           <button onClick={handleExport} className="btn-success flex items-center gap-2">
             <Download size={16} /> تصدير الطلاب
+          </button>
+          <button onClick={handleExportTeachers} className="btn-success flex items-center gap-2 bg-green-600 hover:bg-green-700">
+            <Download size={16} /> تصدير المعلمين
           </button>
         </div>
       </div>
@@ -182,6 +196,21 @@ export default function ExcelImport() {
           )}
         </div>
       )}
+
+      <div className="card bg-blue-50 border border-blue-200">
+        <div className="flex items-center gap-2 text-blue-800 font-bold mb-2">
+          <Download size={18} /> تصدير ملف معلم كامل
+        </div>
+        <p className="text-sm text-blue-700 mb-2">
+          يمكنك تصدير ملف Excel لكل معلم على حدة من صفحة <strong>المعلمين</strong> بالضغط على أيقونة التحميل
+          بجانب كل معلم. الملف يحتوي على ثلاث أوراق:
+        </p>
+        <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
+          <li><strong>المعلم:</strong> معلومات المعلم الأساسية (الاسم، التخصص، الهاتف، البريد)</li>
+          <li><strong>المواد:</strong> جميع المواد التي يدرسها المعلم مع أسماء الصفوف وعدد الطلاب</li>
+          <li><strong>الطلاب:</strong> جميع تلاميذ المعلم في صفوفه المختلفة</li>
+        </ul>
+      </div>
 
       <div className="card">
         <h3 className="font-bold text-lg mb-3">طريقة الاستيراد حسب النوع</h3>

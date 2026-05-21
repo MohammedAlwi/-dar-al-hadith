@@ -3,19 +3,28 @@ import api from '../services/api';
 import { Link } from 'react-router-dom';
 import {
   Users, GraduationCap, School, BookOpen, Building2, DoorOpen,
-  ClipboardCheck, UserCheck, UserX, KeyRound,
+  ClipboardCheck, UserCheck, UserX, KeyRound, AlertTriangle,
 } from 'lucide-react';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [expiringStudents, setExpiringStudents] = useState([]);
+
   useEffect(() => { fetchStats(); }, []);
 
   const fetchStats = async () => {
     try {
-      const [statsRes] = await Promise.all([api.get('/dashboard/stats')]);
+      const [statsRes, studentsRes] = await Promise.all([api.get('/dashboard/stats'), api.get('/students')]);
       setStats(statsRes.data);
+      const now = new Date();
+      const expiring = studentsRes.data.filter(s => {
+        if (!s.residencyExpiry) return false;
+        const diff = (new Date(s.residencyExpiry) - now) / (1000 * 60 * 60 * 24);
+        return diff <= 30;
+      });
+      setExpiringStudents(expiring);
     } catch {} finally { setLoading(false); }
   };
 
@@ -52,6 +61,17 @@ export default function Dashboard() {
           </Link>
         ))}
       </div>
+
+      {expiringStudents.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-amber-800 font-bold mb-2">
+            <AlertTriangle size={18} /> تنبيهات انتهاء الإقامة ({expiringStudents.length})
+          </div>
+          <Link to="/students" className="text-sm text-amber-700 hover:underline">
+            طلاب ستنتهي إقامتهم خلال 30 يوماً - اضغط لعرض التفاصيل
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">

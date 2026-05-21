@@ -20,4 +20,13 @@ const getSheetNames = (filePath) => {
   return workbook.SheetNames;
 };
 
-module.exports = { parseExcel, createExcel, getSheetNames };
+const createExcelMultiSheet = (sheets) => {
+  const workbook = XLSX.utils.book_new();
+  for (const { name, data } of sheets) {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(workbook, worksheet, name);
+  }
+  return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+};
+
+module.exports = { parseExcel, createExcel, createExcelMultiSheet, getSheetNames };

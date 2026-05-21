@@ -59,12 +59,6 @@ export default function Login() {
             {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
           </button>
         </form>
-
-        <div className="mt-6 p-4 bg-blue-50 rounded-xl">
-          <p className="text-xs text-blue-700 text-center">
-            حساب التجربة: <strong>admin</strong> | كلمة المرور: <strong>admin123</strong>
-          </p>
-        </div>
       </div>
     </div>
   );
