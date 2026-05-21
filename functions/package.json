@@ -1,0 +1,18 @@
+{
+  "name": "dar-al-hadith-functions",
+  "version": "1.0.0",
+  "description": "Firebase Cloud Functions for Dar Al-Hadith Institute",
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^4.9.0",
+    "firebase-admin": "^12.1.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-validator": "^7.0.1",
+    "morgan": "^1.10.0",
+    "xlsx": "^0.18.5"
+  },
+  "private": true
+}

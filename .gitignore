@@ -1,0 +1,10 @@
+node_modules/
+dist/
+database.sqlite
+server/uploads/*
+server/*.log
+server/*.err
+server/*.txt
+!.gitkeep
+.env
+.firebase/
