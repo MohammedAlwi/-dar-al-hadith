@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Teachers() {
@@ -42,13 +42,29 @@ export default function Teachers() {
     try { await api.delete(`/teachers/${id}`); toast.success('تم الحذف'); fetchTeachers(); } catch {}
   };
 
+  const handleExport = async () => {
+    try {
+      const res = await api.post('/excel/export-teachers', {}, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url; link.download = `teachers.xlsx`; link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('تم التحميل');
+    } catch { toast.error('حدث خطأ'); }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-800">إدارة المعلمين</h2>
-        <button onClick={() => { setShowForm(true); setEditId(null); setForm({ fullName: '', phone: '', email: '', specialization: '', username: '', password: '' }); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> إضافة معلم
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
+            <Download size={18} /> تحميل Excel
+          </button>
+          <button onClick={() => { setShowForm(true); setEditId(null); setForm({ fullName: '', phone: '', email: '', specialization: '', username: '', password: '' }); }} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> إضافة معلم
+          </button>
+        </div>
       </div>
 
       {showForm && (

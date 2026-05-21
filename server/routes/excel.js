@@ -365,6 +365,49 @@ router.get('/template/:type', authorize('admin'), (req, res) => {
   res.send(buffer);
 });
 
+router.post('/export-teachers', authorize('admin'), async (req, res) => {
+  try {
+    const teachers = await Teacher.findAll({
+      include: [
+        { model: Subject, include: [{ model: Class, include: [{ model: Student, attributes: ['id'] }] }] },
+        { model: Class, include: [{ model: Student, attributes: ['id'] }] },
+      ],
+      order: [['fullName', 'ASC']],
+    });
+
+    const data = teachers.flatMap(t => {
+      const subjects = t.Subjects || [];
+      const classes = t.Classes || [];
+      const allRows = [];
+      const processedClasses = new Set();
+
+      for (const subj of subjects) {
+        const cls = subj.Class;
+        const studentCount = cls?.Students?.length || 0;
+        if (cls) processedClasses.add(cls.id);
+        allRows.push({
+          'المعلم': t.fullName, 'التخصص': t.specialization, 'المادة': subj.name,
+          'الصف': cls?.name || '', 'عدد الطلاب': studentCount,
+        });
+      }
+      for (const cls of classes) {
+        if (!processedClasses.has(cls.id)) {
+          allRows.push({
+            'المعلم': t.fullName, 'التخصص': t.specialization, 'المادة': '',
+            'الصف': cls.name, 'عدد الطلاب': cls.Students?.length || 0,
+          });
+        }
+      }
+      return allRows.length ? allRows : [{ 'المعلم': t.fullName, 'التخصص': t.specialization, 'المادة': '', 'الصف': '', 'عدد الطلاب': '' }];
+    });
+
+    const buffer = createExcel(data, 'المعلمون');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=teachers.xlsx');
+    res.send(buffer);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 router.post('/export-students', authorize('admin'), async (req, res) => {
   try {
     const { classId } = req.body;
