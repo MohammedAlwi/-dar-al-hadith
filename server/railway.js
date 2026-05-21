@@ -1,10 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
+const fs = require('fs');
 const config = require('./config');
 const models = require('./models');
 
 const app = express();
+
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 app.use(cors());
 app.options('*', cors());
