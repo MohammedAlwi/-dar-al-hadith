@@ -6,7 +6,8 @@ const models = require('./models');
 
 const app = express();
 
-app.use(cors({ origin: true }));
+app.use(cors());
+app.options('*', cors());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
