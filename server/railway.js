@@ -34,6 +34,7 @@ app.use('/api/exams', require('./routes/exams'));
 app.use('/api/exam-results', require('./routes/examResults'));
 app.use('/api/excel', require('./routes/excel'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/users', require('./routes/users'));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

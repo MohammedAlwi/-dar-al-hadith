@@ -4,48 +4,63 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen, ClipboardCheck,
   FileSpreadsheet, Building2, DoorOpen, KeyRound, CalendarCheck,
   School, FileText, LogOut, BookMarked, ChevronDown, ChevronUp,
+  UserCog,
 } from 'lucide-react';
 import { useState } from 'react';
 
-const navItems = [
-  { to: '/', label: 'لوحة التحكم', icon: LayoutDashboard },
-  { to: '/students', label: 'الطلاب', icon: Users },
-  { to: '/teachers', label: 'المعلمون', icon: GraduationCap },
-  { to: '/classes', label: 'الصفوف', icon: School },
-  { to: '/subjects', label: 'المواد الدراسية', icon: BookOpen },
-  { to: '/academic-years', label: 'السنوات الدراسية', icon: CalendarCheck },
+const allNavItems = [
+  { to: '/', label: 'لوحة التحكم', icon: LayoutDashboard, roles: ['admin', 'teacher', 'student', 'data_entry'] },
+  { to: '/students', label: 'الطلاب', icon: Users, roles: ['admin', 'teacher', 'data_entry'] },
+  { to: '/teachers', label: 'المعلمون', icon: GraduationCap, roles: ['admin', 'data_entry'] },
+  { to: '/classes', label: 'الصفوف', icon: School, roles: ['admin', 'teacher', 'data_entry'] },
+  { to: '/subjects', label: 'المواد الدراسية', icon: BookOpen, roles: ['admin', 'teacher', 'data_entry'] },
+  { to: '/academic-years', label: 'السنوات الدراسية', icon: CalendarCheck, roles: ['admin', 'data_entry'] },
   {
-    label: 'الحضور والغياب', icon: ClipboardCheck,
+    label: 'الحضور والغياب', icon: ClipboardCheck, roles: ['admin', 'teacher', 'data_entry'],
     children: [
-      { to: '/attendance', label: 'تسجيل الحضور' },
-      { to: '/attendance/report', label: 'تقارير الحضور' },
+      { to: '/attendance', label: 'تسجيل الحضور', roles: ['admin', 'teacher', 'data_entry'] },
+      { to: '/attendance/report', label: 'تقارير الحضور', roles: ['admin', 'teacher'] },
     ],
   },
   {
-    label: 'الدرجات', icon: FileSpreadsheet,
+    label: 'الدرجات', icon: FileSpreadsheet, roles: ['admin', 'teacher'],
     children: [
-      { to: '/grades', label: 'إدارة الدرجات' },
+      { to: '/grades', label: 'إدارة الدرجات', roles: ['admin', 'teacher'] },
     ],
   },
-  { to: '/exams', label: 'الامتحانات', icon: BookMarked },
+  { to: '/exams', label: 'الامتحانات', icon: BookMarked, roles: ['admin', 'teacher'] },
   {
-    label: 'الإقامة', icon: Building2,
+    label: 'الإقامة', icon: Building2, roles: ['admin', 'data_entry'],
     children: [
-      { to: '/dormitories', label: 'المباني' },
-      { to: '/rooms', label: 'الغرف' },
-      { to: '/room-assignments', label: 'تسجيل الطلاب' },
+      { to: '/dormitories', label: 'المباني', roles: ['admin', 'data_entry'] },
+      { to: '/rooms', label: 'الغرف', roles: ['admin', 'data_entry'] },
+      { to: '/room-assignments', label: 'تسجيل الطلاب', roles: ['admin', 'data_entry'] },
     ],
   },
-  { to: '/excel', label: 'رفع Excel', icon: FileText },
+  { to: '/excel', label: 'رفع Excel', icon: FileText, roles: ['admin', 'data_entry'] },
+  { to: '/users', label: 'المستخدمين', icon: UserCog, roles: ['admin'] },
 ];
 
+function userCanSee(item, userRole) {
+  if (!item.roles) return true;
+  return item.roles.includes(userRole);
+}
+
 export default function Sidebar() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = (label) => {
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   };
+
+  const navItems = allNavItems.filter(item => {
+    if (item.children) {
+      const visibleChildren = item.children.filter(c => userCanSee(c, user?.role));
+      return visibleChildren.length > 0;
+    }
+    return userCanSee(item, user?.role);
+  });
 
   return (
     <aside className="w-64 bg-blue-950 text-white flex flex-col h-full">
@@ -57,11 +72,23 @@ export default function Sidebar() {
             <p className="text-xs text-blue-300">نظام الإدارة المتكامل</p>
           </div>
         </div>
+        {user && (
+          <div className="mt-2 text-xs text-blue-300 bg-blue-900/50 rounded-lg p-2">
+            <div className="font-medium text-white">{user.fullName}</div>
+            <div>
+              {user.role === 'admin' && 'مسئول النظام'}
+              {user.role === 'teacher' && 'معلم'}
+              {user.role === 'student' && 'طالب'}
+              {user.role === 'data_entry' && 'مدخل بيانات'}
+            </div>
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         {navItems.map((item) => {
           if (item.children) {
+            const visibleChildren = item.children.filter(c => userCanSee(c, user?.role));
             const isOpen = openMenus[item.label];
             return (
               <div key={item.label}>
@@ -75,7 +102,7 @@ export default function Sidebar() {
                 </button>
                 {isOpen && (
                   <div className="mr-6 space-y-1 mt-1">
-                    {item.children.map((child) => (
+                    {visibleChildren.map((child) => (
                       <NavLink
                         key={child.to}
                         to={child.to}

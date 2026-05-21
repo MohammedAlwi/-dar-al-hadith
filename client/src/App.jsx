@@ -18,6 +18,7 @@ import RoomAssignments from './pages/RoomAssignments';
 import Exams from './pages/Exams';
 import ExcelImport from './pages/ExcelImport';
 import AcademicYears from './pages/AcademicYears';
+import Users from './pages/Users';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="exams" element={<Exams />} />
         <Route path="excel" element={<ExcelImport />} />
         <Route path="academic-years" element={<AcademicYears />} />
+        <Route path="users" element={<Users />} />
       </Route>
     </Routes>
   );
